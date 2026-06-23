@@ -1,0 +1,109 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// --- MODELOS DE USUARIO ---
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  passwordHash  String         @map("password_hash")
+  role          Role           @default(USER)
+  createdAt     DateTime       @default(now()) @map("created_at")
+  gdprConsentAt DateTime?      @map("gdpr_consent_at")
+  verifications Verification[]
+
+  @@map("users")
+}
+
+// --- FLUJO DE VERIFICACIÓN ---
+
+model Verification {
+  id             String          @id @default(uuid())
+  userId         String          @map("user_id")
+  status         VerifStatus     @default(PENDING)
+  riskScore      Float?          @map("risk_score") // Trust Score global
+  fraudScore     Float?          @map("fraud_score")
+  docScore       Float?          @map("doc_score")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  completedAt    DateTime?       @map("completed_at")
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documents      Document[]
+  riskAssessment RiskAssessment?
+
+  @@map("verifications")
+}
+
+// --- DOCUMENTOS SUBIDOS (OCR) ---
+
+model Document {
+  id             String       @id @default(uuid())
+  verificationId String       @map("verification_id")
+  type           DocType
+  side           String?      // "front" | "back" — cara del documento  ← AÑADE ESTO
+  storageUrl     String       @map("storage_url")
+  ocrResult      Json?        @map("ocr_result")
+  hash           String
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  verification   Verification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+
+  @@map("documents")
+}
+
+// --- ANÁLISIS DE RIESGO E IA ---
+
+model RiskAssessment {
+  id             String   @id @default(uuid())
+  verificationId String   @unique @map("verification_id")
+  amlCheck       String?  @map("aml_check") // Resultado de OpenSanctions
+  pepCheck       String?  @map("pep_check")
+  declaredData   Json?    @map("declared_data") // AQUÍ SE GUARDAN LOS DATOS DEL FORMULARIO
+  riskLevel      String?  @map("risk_level")
+  faceMatch      Float?   @map("face_match")
+  ocrMatch       Boolean? @map("ocr_match") // Validación cruzada
+  mrzValid       Boolean? @map("mrz_valid") // Dígitos de control MRZ ICAO válidos
+  mrzMatch       Boolean? @map("mrz_match") // Datos MRZ coherentes con formulario
+  aiReport       String?  @map("ai_report") // Informe narrativo de Claude/IA
+  amlAlert       Boolean  @default(false) @map("aml_alert") // Se añade para activar "sujetos" que son amenaza en el sistema
+
+  // CORRECCIÓN: Se añade @default(now()) para evitar el error de "Null constraint" en la creación
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at")
+
+  verification   Verification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+
+  @@map("risk_assessments")
+}
+
+// --- ENUMS (Catálogos) ---
+
+enum Role {
+  USER
+  ADMIN
+  REVIEWER
+}
+
+enum VerifStatus {
+  PENDING
+  PROCESSING
+  APPROVED
+  REVIEW
+  REJECTED
+}
+
+enum DocType {
+  DNI
+  PASAPORTE
+  NIE
+  CARNET_CONDUCIR
+  CEDULA
+}

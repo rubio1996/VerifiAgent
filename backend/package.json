@@ -1,0 +1,39 @@
+{
+  "name": "verifid-backend",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "postinstall": "prisma generate",
+    "dev": "nodemon src/index.js",
+    "test": "node --test tests/*.test.js",
+    "validate": "prisma validate",
+    "ci": "npm run validate && npm test"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.94.0",
+    "@prisma/client": "^6.19.3",
+    "@supabase/ssr": "^0.10.2",
+    "@supabase/supabase-js": "^2.105.3",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^7.2.0",
+    "fuzzball": "^2.2.6",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.0",
+    "multer": "^2.1.1",
+    "node-fetch": "^2.7.0",
+    "pdfkit": "^0.18.0",
+    "prisma": "^6.19.3",
+    "sharp": "^0.34.5",
+    "tesseract.js": "^7.0.0",
+    "uuid": "^14.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
