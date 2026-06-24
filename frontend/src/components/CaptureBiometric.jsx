@@ -8,7 +8,7 @@ export default function CaptureBiometric({ onResult }) {
   const [loadingModels, setLoadingModels] = useState(true);
   const [status, setStatus] = useState('inicial');
   const [distance, setDistance] = useState(null);
-  const isTest = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('test') === 'true';
+  // Modo test eliminado: solo flujo interactivo real (cámara + subida de documento)
 
   useEffect(() => {
     const load = async () => {
@@ -57,16 +57,6 @@ export default function CaptureBiometric({ onResult }) {
       let selfieData;
       let docDataUrl;
 
-      if (isTest) {
-        // En modo test usamos inputs de fichero añadidos al DOM (para automatización E2E)
-        const selfieInput = document.getElementById('test-selfie');
-        const docInput = document.getElementById('test-doc');
-        if (!selfieInput || !docInput || !selfieInput.files.length || !docInput.files.length) {
-          throw new Error('Faltan archivos de prueba (selfie/document) en modo test');
-        }
-        selfieData = await readFileAsDataUrl(selfieInput.files[0]);
-        docDataUrl = await readFileAsDataUrl(docInput.files[0]);
-      } else {
         const selfie = captureFrame();
         selfieData = selfie;
         stopCamera();
@@ -126,12 +116,6 @@ export default function CaptureBiometric({ onResult }) {
       {loadingModels && <p>Cargando modelos de reconocimiento facial...</p>}
       {!loadingModels && (
         <>
-          {isTest && (
-            <div style={{ display: 'none' }}>
-              <input id="test-selfie" type="file" accept="image/*" />
-              <input id="test-doc" type="file" accept="image/*" />
-            </div>
-          )}
           {status !== 'camera' && <button onClick={startCamera}>Iniciar cámara</button>}
           {status === 'camera' && <button onClick={stopCamera}>Detener cámara</button>}
           <div style={{ marginTop: 8 }}>

@@ -66,9 +66,7 @@ function ProgressStrip({ currentStep, finalResult }) {
 
 // ── App ───────────────────────────────────────────────────
 function readStoredSession() {
-  const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
-  const isTest = params?.get('test') === 'true'
-  if (isTest) return { user: { email: localStorage.getItem('verifid_email') || 'prueba@local.local' }, step: 2 }
+  // No activar saltos por query string en producción; usar token/email almacenados.
   const token = localStorage.getItem('verifid_token')
   const email = localStorage.getItem('verifid_email')
   if (token && email) return { user: { email }, step: 1 }

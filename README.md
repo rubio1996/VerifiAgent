@@ -185,6 +185,101 @@ npm run dev
 
 ---
 
+## 🧪 Ejecución local y pruebas E2E
+
+Estos pasos ayudan a ejecutar la aplicación en desarrollo y correr las pruebas Playwright que automatizan el flujo de verificación.
+
+- Descargar modelos de face-api (si no están en `frontend/public/models`):
+
+```bash
+cd frontend
+# script incluido para descargar modelos
+node scripts/download_faceapi_models.cjs
+```
+
+- Crear usuario de prueba (backend):
+
+```bash
+cd backend
+node scripts/create_test_user.cjs prueba@local.local MiPass123!
+# Credenciales: prueba@local.local / MiPass123!
+```
+
+- Variables útiles en desarrollo (ejemplo local):
+
+En `backend/.env`:
+```env
+DATABASE_URL=file:./dev.db   # opción SQLite para desarrollo local
+JWT_SECRET=un_secreto_local_seguro
+PORT=3001
+EMAIL_API_KEY=               # configurar cuando pruebes emails
+```
+
+En `frontend/.env`:
+```env
+VITE_API_URL=http://localhost:3001
+# Nota: el modo de test por query string fue eliminado. Para entornos de CI, usa un endpoint de pruebas o mocks.
+```
+
+- Ejecutar backend y frontend (en dos terminales):
+
+```bash
+# Terminal 1: backend
+cd backend
+npm install
+npx prisma generate
+npm run dev
+
+# Terminal 2: frontend
+cd frontend
+npm install
+npx playwright install
+npm run dev
+```
+
+- Ejecutar pruebas Playwright (desde `frontend`):
+
+```bash
+cd frontend
+# ejecuta la suite E2E (usa la configuración en e2e/)
+npx playwright test --config=./e2e/playwright.config.cjs
+```
+
+Notas:
+- El proyecto antiguamente usaba un flag `?test=true` para pruebas; se ha removido. Para CI, provisiona un endpoint de testing que inyecte imágenes o usa mocks en las pruebas.
+- Si Playwright no encuentra el servidor, asegúrate de arrancar Vite (`npm run dev`) antes de ejecutar las pruebas.
+
+---
+
+## ✉️ Emails y proveedor (Resend u otro)
+
+- Antes de enviar emails en producción debes verificar el dominio remitente en el proveedor (ej. Resend). Hasta que el dominio esté verificado los envíos pueden ser rechazados.
+- Guarda la API key en GitHub Secrets y en `backend/.env` como `EMAIL_API_KEY`.
+- Script de prueba (backend): `backend/send_test_email.js` — puedes ejecutarlo con `node send_test_email.js` tras configurar `EMAIL_API_KEY`.
+
+---
+
+## 🗄️ Producción y migraciones
+
+- Para producción usa un Postgres gestionado (Supabase, Railway, etc.) y actualiza `backend/.env` con `DATABASE_URL` apropiado.
+- Ejecutar migraciones en deploy:
+
+```bash
+cd backend
+npx prisma migrate deploy
+```
+
+---
+
+## ⚠️ Notas importantes
+
+- Modelos de face-api están incluidos en `frontend/public/models` para desarrollo; revisa licencia y origen si los vas a distribuir públicamente.
+- Las imágenes en `frontend/public/test-images` son placeholders: reemplázalas por imágenes con permiso de uso para pruebas reales.
+- Asegura `JWT_SECRET`, `DATABASE_URL` y `EMAIL_API_KEY` en GitHub Secrets para CI; no comites valores en `.env`.
+
+
+---
+
 ## 🌱 Variables de Entorno
 
 ### `backend/.env`
