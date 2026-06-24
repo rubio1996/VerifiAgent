@@ -1,0 +1,63 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch: {}
+
+jobs:
+  e2e:
+    name: Run Playwright E2E
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: |
+          npm ci
+
+      - name: Install frontend dependencies & Playwright browsers
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      - name: Start backend
+        working-directory: backend
+        run: |
+          npm run dev &
+          echo "backend-started"
+
+      - name: Start frontend (Vite)
+        working-directory: frontend
+        run: |
+          npx vite --host 127.0.0.1 --port 5173 &
+          echo "frontend-started"
+
+      - name: Wait for services
+        run: |
+          npx wait-on http://127.0.0.1:3001/health http://127.0.0.1:5173 || (sleep 2 && npx wait-on http://127.0.0.1:3001/health http://127.0.0.1:5173)
+
+      - name: Run Playwright tests
+        working-directory: frontend
+        env:
+          CI: true
+        run: |
+          npx playwright test --config=./e2e/playwright.config.cjs --reporter=list
+
+      - name: Upload Playwright report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: frontend/test-results || frontend/playwright-report || frontend/playwright-report.html

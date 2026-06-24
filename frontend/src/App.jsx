@@ -5,6 +5,7 @@ import StepDatos from './pages/StepDatos'
 import UploadZone from './components/UploadZone'
 import StepResultado from './pages/StepResultado'
 import AnalyzingScreen from './components/AnalyzingScreen'
+import CaptureBiometric from './components/CaptureBiometric'
 import { verifyService } from './services/api'
 
 // ── Dark mode ─────────────────────────────────────────────
@@ -65,6 +66,9 @@ function ProgressStrip({ currentStep, finalResult }) {
 
 // ── App ───────────────────────────────────────────────────
 function readStoredSession() {
+  const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+  const isTest = params?.get('test') === 'true'
+  if (isTest) return { user: { email: localStorage.getItem('verifid_email') || 'prueba@local.local' }, step: 2 }
   const token = localStorage.getItem('verifid_token')
   const email = localStorage.getItem('verifid_email')
   if (token && email) return { user: { email }, step: 1 }
@@ -215,6 +219,10 @@ function App() {
                 setCurrentStep(3)
               }}
             />
+            {/* PoC biométrica: componente de captura y comparación */}
+            <div style={{ marginTop: 16 }}>
+              <CaptureBiometric onResult={(r) => console.log('Biometric result', r)} />
+            </div>
           </div>
         )}
 

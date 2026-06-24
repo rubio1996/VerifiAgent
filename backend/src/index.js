@@ -9,6 +9,8 @@ const authRoutes   = require('./routes/auth');
 const verifyRoutes = require('./routes/verify');
 const adminRoutes  = require('./routes/admin');
 const userRoutes   = require('./routes/user');
+const emailRoutes  = require('./routes/email');
+const biometricsRoutes = require('./routes/biometrics');
 const { globalLimiter } = require('./middleware/rateLimiter');
 
 const app  = express();
@@ -36,6 +38,8 @@ app.use('/api/auth',   authRoutes);
 app.use('/api/verify', verifyRoutes);
 app.use('/api/admin',  adminRoutes);
 app.use('/api/user',   userRoutes);
+app.use('/api/email',  emailRoutes);
+app.use('/api/biometrics', biometricsRoutes);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
